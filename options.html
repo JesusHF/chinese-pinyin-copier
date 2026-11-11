@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chinese Pinyin Copier - Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo-group">
+        <img src="icons/icon48.png" alt="Extension Logo" class="logo">
+        <div>
+          <h1>Chinese Pinyin Copier</h1>
+          <p class="subtitle">Settings & Preferences</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="settings-grid">
+      <!-- Section: Pinyin Output Formatting -->
+      <section class="card">
+        <h2>Pinyin Output Format</h2>
+        
+        <div class="form-group">
+          <label class="form-label" for="toneType">Tone Accent Style</label>
+          <select id="toneType" class="form-select">
+            <option value="symbol">Tone Marks (e.g. nǐ hǎo) — Standard</option>
+            <option value="num">Tone Numbers (e.g. ni3 hao3)</option>
+            <option value="none">No Tones (e.g. ni hao)</option>
+          </select>
+          <p class="form-hint">Controls how tonal inflections are represented in the copied text.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="grouping">Word Grouping (分词连写)</label>
+          <select id="grouping" class="form-select">
+            <option value="words" selected>Group by Words (e.g. xǐshǒujiān zài nǎlǐ) — Recommended</option>
+            <option value="syllables">Individual Syllables (e.g. xǐ shǒu jiān zài nǎ lǐ)</option>
+          </select>
+          <p class="form-hint">Groups syllables belonging to the same lexical word together (GB/T 16159-2012 orthography).</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="separator">Syllable Separator</label>
+          <select id="separator" class="form-select">
+            <option value=" ">Space ("nǐ hǎo")</option>
+            <option value="-">Hyphen ("nǐ-hǎo")</option>
+            <option value="">None ("nǐhǎo")</option>
+          </select>
+          <p class="form-hint">Delimits individual character syllables (when Word Grouping is set to Individual Syllables).</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="erhua">Erhua (儿化音) Contraction</label>
+          <select id="erhua" class="form-select">
+            <option value="phonetic">Phonetic Contraction (e.g. dian + er → diar, wan + er → war) — Recommended</option>
+            <option value="standard">Standard Orthography (e.g. dian + er → dianr, wan + er → wanr)</option>
+            <option value="off">Separate Syllables (e.g. diǎn ér)</option>
+          </select>
+          <p class="form-hint">Controls how words with the Erhua suffix (like 一点儿, 花儿, 玩儿) are merged.</p>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="toneSandhi" checked>
+            <span class="checkbox-custom"></span>
+            <span class="label-text">
+              <strong>Enable Tone Sandhi (变调)</strong>
+              <small>Applies natural phonetic changes (e.g., third tone shifts, 不 and 一 alterations).</small>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Section: Feedback & Notifications -->
+      <section class="card">
+        <h2>Feedback & Notifications</h2>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="showToast" checked>
+            <span class="checkbox-custom"></span>
+            <span class="label-text">
+              <strong>Display in-page Toast notification</strong>
+              <small>Shows a sleek floating HUD on the active webpage confirming copied text.</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="form-group" id="durationGroup">
+          <label class="form-label" for="toastDuration">Toast Display Duration</label>
+          <select id="toastDuration" class="form-select">
+            <option value="1500">1.5 seconds</option>
+            <option value="2500" selected>2.5 seconds (Default)</option>
+            <option value="3500">3.5 seconds</option>
+            <option value="5000">5.0 seconds</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Section: Live Interactive Playground -->
+      <section class="card preview-card">
+        <h2>Interactive Preview Sandbox</h2>
+        <p class="preview-description">Type or paste Chinese text below to preview the exact clipboard output with your current settings.</p>
+
+        <div class="form-group">
+          <label class="form-label" for="testInput">Input Chinese Text</label>
+          <input type="text" id="testInput" class="form-input" value="今天有一点儿冷，我们出去玩儿吧">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Converted Output Preview</label>
+          <div class="preview-output" id="previewOutput">jīn tiān yǒu yì diǎr lěng ， wǒ men chū qù wár ba</div>
+        </div>
+
+        <button type="button" id="copyTestBtn" class="btn btn-secondary">
+          <span>📋 Test Copy to Clipboard</span>
+        </button>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div id="statusMessage" class="status-message"></div>
+      <div class="btn-group">
+        <button type="button" id="resetBtn" class="btn btn-tertiary">Reset Defaults</button>
+        <button type="button" id="saveBtn" class="btn btn-primary">Save Settings</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="lib/pinyin-pro.js"></script>
+  <script src="lib/erhua.js"></script>
+  <script src="lib/segmenter.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

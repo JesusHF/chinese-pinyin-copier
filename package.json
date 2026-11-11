@@ -1,0 +1,21 @@
+{
+  "name": "chinese-pinyin-copier",
+  "version": "1.0.0",
+  "description": "Chrome extension that copies the Pinyin of selected Chinese text to clipboard when clicking the pinned toolbar icon.",
+  "scripts": {
+    "test": "node test/unit-test.js",
+    "generate-icons": "./scripts/generate-icons.sh"
+  },
+  "keywords": [
+    "chrome-extension",
+    "pinyin",
+    "chinese",
+    "clipboard",
+    "mandarin"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pinyin-pro": "^3.29.5"
+  }
+}
