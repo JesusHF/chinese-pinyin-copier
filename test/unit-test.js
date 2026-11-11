@@ -380,7 +380,7 @@ console.log('✓ Tone styles with word grouping passed!');
 // 11.3 Word grouping with Erhua integration
 const erhuaSentence = '今天有一点儿冷，出去玩儿吧！';
 const erhuaResult = convertWithWordGrouping(erhuaSentence, pinyin, { grouping: 'words', erhua: 'phonetic' }, convertWithErhua);
-assert.strictEqual(erhuaResult, 'jīntiān yǒu yìdiǎr lěng， chūqù wár ba！', 'Word grouping with Erhua phonetic');
+assert.strictEqual(erhuaResult, 'jīntiān yǒu yìdiǎr lěng, chūqù wár ba！', 'Word grouping with Erhua phonetic');
 console.log('✓ Word grouping with Erhua integration passed!');
 
 // 11.4 Syllables fallback mode
@@ -406,11 +406,21 @@ assert.strictEqual(matrixWordResult.matrix[1][0], 'nǐ huì shuō yīngwén ma?'
 assert.strictEqual(matrixWordResult.matrix[1][1], 'jīntiān yǒu yìdiǎr lěng', 'Matrix [1][1] grouped');
 console.log('✓ Tabular 2D matrix with word grouping passed!\n');
 
-// 11.6 Punctuation spacing normalization (no space before commas, colons, etc.)
+// 11.6 Punctuation spacing normalization (ASCII commas, exactly one space after)
+assert.strictEqual(
+  convertWithWordGrouping('差不多，我们', pinyin, { grouping: 'words' }, convertWithErhua),
+  'chàbùduō, wǒmen',
+  'Full-width comma becomes ASCII comma with one trailing space'
+);
+assert.strictEqual(
+  convertWithWordGrouping('差不多，我们', pinyin, { grouping: 'syllables', separator: ' ' }, convertWithErhua),
+  'chà bù duō, wǒ men',
+  'Syllable grouping also uses ASCII commas with one trailing space'
+);
 assert.strictEqual(
   convertWithWordGrouping('你好，世界！', pinyin, { grouping: 'words' }, convertWithErhua),
-  'nǐhǎo， shìjiè！',
-  'No space before full-width comma'
+  'nǐhǎo, shìjiè！',
+  'Full-width comma normalized to ASCII with one trailing space'
 );
 assert.strictEqual(
   convertWithWordGrouping('你好 , 世界 !', pinyin, { grouping: 'words' }, convertWithErhua),
@@ -418,10 +428,15 @@ assert.strictEqual(
   'No space before half-width comma and exclamation'
 );
 assert.strictEqual(
+  convertWithWordGrouping('今天，  我很开心。', pinyin, { grouping: 'words' }, convertWithErhua),
+  'jīntiān, wǒ hěn kāixīn.',
+  'Collapses multiple spaces after a comma to exactly one'
+);
+assert.strictEqual(
   convertWithWordGrouping('今天，我很开心。', pinyin, { grouping: 'words' }, convertWithErhua),
-  'jīntiān， wǒ hěn kāixīn。',
+  'jīntiān, wǒ hěn kāixīn.',
   'Full sentence comma and period formatting'
 );
-console.log('✓ Punctuation spacing normalization (no space before commas) passed!');
+console.log('✓ Punctuation spacing normalization (ASCII commas and periods) passed!');
 
 console.log('🎉 ALL UNIT TESTS PASSED SUCCESSFULLY! 🎉');
