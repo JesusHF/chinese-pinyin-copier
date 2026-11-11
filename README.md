@@ -30,10 +30,7 @@ A Google Chrome extension (Manifest V3) that converts selected Chinese character
    Toggle on the **Developer mode** switch in the top-right corner.
 3. **Load Unpacked Extension**:
    - Click the **Load unpacked** button in the top-left corner.
-   - Select the `ChineseExtension` directory:
-     ```text
-     /Users/jesus.hernandez02/Repos/_Personal/ChineseExtension
-     ```
+   - Select the root `chinese-pinyin-copier` directory where you cloned or extracted the project.
 4. **Pin the Extension**:
    - Click the **Extensions puzzle icon** (`🧩`) in Chrome's top-right toolbar.
    - Click the **Pin icon** (`📌`) next to **Chinese Pinyin Copier**.
@@ -44,10 +41,7 @@ A Google Chrome extension (Manifest V3) that converts selected Chinese character
 ## 🧪 Testing the Extension
 
 1. Open the included test page directly in Chrome:
-   - Press `Cmd+O` in Chrome and select:
-     ```text
-     /Users/jesus.hernandez02/Repos/_Personal/ChineseExtension/test/test-page.html
-     ```
+   - Press `Cmd+O` (or `Ctrl+O` on Windows/Linux) in Chrome and open `test/test-page.html` from the repository root.
 2. Highlight any of the Chinese phrases (e.g. `你好世界` or `重庆`).
 3. Click the **pinned extension icon** in your toolbar.
 4. Watch the confirmation badge (`✓`) and the floating toast appear.
@@ -87,4 +81,4 @@ This verifies:
 
 ## 📄 Specification Document
 
-For the comprehensive technical specification, architecture diagrams, and error-handling matrix, consult [`SPECIFICATION.md`](file:///Users/jesus.hernandez02/Repos/_Personal/ChineseExtension/SPECIFICATION.md).
+For the comprehensive technical specification, architecture diagrams, and error-handling matrix, consult [`SPECIFICATION.md`](SPECIFICATION.md).
