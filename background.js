@@ -8,12 +8,16 @@
  * and displays user feedback.
  */
 
-// Import the bundled pinyin-pro library and Erhua/Word helpers (in service worker context)
+// Import the bundled pinyin-pro library and Polyphonic/Erhua/Word helpers (in service worker context)
 if (typeof importScripts === 'function') {
-  importScripts('lib/pinyin-pro.js', 'lib/erhua.js', 'lib/segmenter.js');
+  importScripts('lib/pinyin-pro.js', 'lib/polyphonic.js', 'lib/erhua.js', 'lib/segmenter.js');
 }
 
 // In Node environment, require helpers
+const Polyphonic = typeof PolyphonicHelper !== 'undefined'
+  ? PolyphonicHelper
+  : (typeof require === 'function' ? require('./lib/polyphonic.js') : null);
+
 const Erhua = typeof ErhuaHelper !== 'undefined'
   ? ErhuaHelper
   : (typeof require === 'function' ? require('./lib/erhua.js') : null);
@@ -21,6 +25,17 @@ const Erhua = typeof ErhuaHelper !== 'undefined'
 const WordGrouping = typeof WordGroupingHelper !== 'undefined'
   ? WordGroupingHelper
   : (typeof require === 'function' ? require('./lib/segmenter.js') : null);
+
+/**
+ * Converts text with the full sentence context, applying the polyphonic rules
+ * (e.g. 了 -> le / liǎo / liào) used by every conversion path.
+ */
+function convertWithContext(text, pinyinFn, options) {
+  if (Polyphonic && typeof Polyphonic.pinyinWithPolyphony === 'function') {
+    return Polyphonic.pinyinWithPolyphony(text, pinyinFn, options);
+  }
+  return pinyinFn(text, options);
+}
 
 // Default user settings
 const DEFAULT_SETTINGS = {
@@ -222,7 +237,7 @@ function convertMatrixToPinyin(matrix, pinyinFn, options = {}) {
               erhua: options.erhua || 'phonetic'
             });
           }
-          return pinyinFn(cellStr, {
+          return convertWithContext(cellStr, pinyinFn, {
             toneType: options.toneType || 'symbol',
             separator: options.separator !== undefined ? options.separator : ' ',
             toneSandhi: options.toneSandhi !== undefined ? options.toneSandhi : true,
@@ -475,7 +490,7 @@ if (typeof chrome !== 'undefined' && chrome.action && chrome.action.onClicked) {
             erhua: settings.erhua || 'phonetic'
           });
         } else {
-          pinyinText = pinyinFn(selectedText, {
+          pinyinText = convertWithContext(selectedText, pinyinFn, {
             toneType: settings.toneType,
             separator: settings.separator,
             toneSandhi: settings.toneSandhi,

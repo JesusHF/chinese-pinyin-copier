@@ -7,7 +7,7 @@ A Google Chrome extension (Manifest V3) that converts selected Chinese character
 ## ✨ Features
 
 - **One-Click Pinned Action**: No cumbersome popups. Just select text and click the pinned icon in the toolbar.
-- **Accurate Pinyin Engine**: Powered by offline `pinyin-pro`, supporting diacritics, polyphonic context disambiguation (多音字), and tone sandhi (变调).
+- **Accurate Pinyin Engine**: Powered by offline `pinyin-pro`, supporting diacritics, polyphonic context disambiguation (多音字), and tone sandhi (变调). The particle 了 is always resolved from the full sentence (`他来了` → `tā lái le`), while lexical readings are preserved (`了解` → `liǎo jiě`, `了望台` → `liào wàng tái`).
 - **Google Sheets & Spreadsheet Range Support**: Highlight any multi-cell row/column range in Google Sheets or web tables. Accurately converts Chinese cells while preserving numbers, empty cells, and labels in their exact 2D grid coordinates.
 - **Dual-MIME Clipboard Delivery**: Writes both TSV (`text/plain`) and HTML table (`text/html`) to the clipboard so pasting into Google Sheets, Excel, or Numbers aligns cells perfectly without spilling.
 - **Universal Selection Support**: Works across standard webpage text, links, and text within `<input>` and `<textarea>` elements.
@@ -75,6 +75,7 @@ This verifies:
 - Manifest V3 configuration & permission schema.
 - Chinese CJK Unicode regex accuracy.
 - Tone formatting, separators, and polyphonic disambiguation (多音字).
+- 了 (`le` / `liǎo` / `liào`) rules in every conversion path, including word grouping and spreadsheet cells.
 - Icon asset dimensions and integrity.
 
 ---

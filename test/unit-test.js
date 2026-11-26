@@ -33,6 +33,13 @@ const {
   convertWithWordGrouping
 } = require('../lib/segmenter.js');
 
+// Load Polyphonic (了 le / liǎo / liào) helper
+const {
+  LE_RULES,
+  classifyLe,
+  pinyinWithPolyphony
+} = require('../lib/polyphonic.js');
+
 console.log('--- Running Tests for Chinese Pinyin Copier ---\n');
 
 // 1. Manifest V3 Validation
@@ -438,5 +445,162 @@ assert.strictEqual(
   'Full sentence comma and period formatting'
 );
 console.log('✓ Punctuation spacing normalization (ASCII commas and periods) passed!');
+
+// 12. Polyphonic 了 disambiguation (le / liǎo / liào)
+console.log('12. Testing 了 (le / liǎo / liào) disambiguation...');
+
+assert(LE_RULES.length >= 7, 'All 了 reading rules must be documented');
+
+// 12.1 Direct rule classification.  null means the case is left to
+// pinyin-pro's own (correct) full-sentence disambiguation.
+const classifyCases = [
+  ['他来了', 2, null],         // aspect particle - pinyin-pro handles it in context
+  ['下雨了', 2, null],         // sentence-final modal particle
+  ['看了看', 1, null],         // V了V reduplication
+  ['为了你', 1, 'le'],         // fixed function word
+  ['除了他', 1, 'le'],         // fixed function word
+  ['算了', 1, 'le'],
+  ['罢了', 1, 'le'],
+  ['了', 0, 'le'],             // isolated 了 defaults to particle reading
+  ['了。', 0, 'le'],
+  ['了吗', 0, 'le'],
+  ['了解', 0, 'liǎo'],         // lexical verb "understand"
+  ['直截了当', 2, 'liǎo'],     // lexical verb "finish"
+  ['一笑了之', 1, null],       // idiom handled by pinyin-pro
+  ['一目了然', 3, null],
+  ['受不了', 2, 'liǎo'],       // potential complement V不了
+  ['去不了', 2, 'liǎo'],
+  ['办得了', 2, 'liǎo'],       // potential complement V得了
+  ['了望台', 0, 'liào']        // 瞭望 variant
+];
+for (const [text, index, expected] of classifyCases) {
+  assert.strictEqual(
+    classifyLe(text, index), expected,
+    `classifyLe(${JSON.stringify(text)}, ${index}) should be ${expected}`
+  );
+}
+
+// 12.2 Context-aware conversion - neutral particle le
+const leCases = [
+  ['了', 'le'],
+  ['了。', 'le 。'],
+  ['了吗', 'le ma'],
+  ['他来了', 'tā lái le'],
+  ['下雨了', 'xià yǔ le'],
+  ['我买了一本书', 'wǒ mǎi le yì běn shū'],
+  ['会议结束了', 'huì yì jié shù le'],
+  ['看了看', 'kàn le kàn'],
+  ['说了又说', 'shuō le yòu shuō'],
+  ['为了你', 'wèi le nǐ'],
+  ['除了他', 'chú le tā'],
+  ['算了', 'suàn le'],
+  ['罢了', 'bà le'],
+  ['好了', 'hǎo le'],
+  ['对了', 'duì le']
+];
+for (const [text, expected] of leCases) {
+  assert.strictEqual(
+    pinyinWithPolyphony(text, pinyin, { toneType: 'symbol', separator: ' ' }),
+    expected, `${JSON.stringify(text)} should use le: ${expected}`
+  );
+}
+
+// 12.3 Context-aware conversion - lexical liǎo and liào
+const liaoCases = [
+  ['了解', 'liǎo jiě'],
+  ['了结', 'liǎo jié'],
+  ['了不起', 'liǎo bù qǐ'],
+  ['受不了', 'shòu bù liǎo'],
+  ['去不了', 'qù bù liǎo'],
+  ['办得了', 'bàn dé liǎo'],
+  ['知了', 'zhī liǎo'],
+  ['一目了然', 'yí mù liǎo rán'],
+  ['直截了当', 'zhí jié liǎo dàng'],
+  ['一笑了之', 'yí xiào liǎo zhī'],
+  ['没完没了', 'méi wán méi liǎo'],
+  ['大不了', 'dà bù liǎo'],
+  ['了望台', 'liào wàng tái']
+];
+for (const [text, expected] of liaoCases) {
+  assert.strictEqual(
+    pinyinWithPolyphony(text, pinyin, { toneType: 'symbol', separator: ' ' }),
+    expected, `${JSON.stringify(text)} should be: ${expected}`
+  );
+}
+
+// 12.4 All tone styles keep the correct reading
+assert.strictEqual(
+  pinyinWithPolyphony('他来了', pinyin, { toneType: 'num', separator: ' ' }),
+  'ta1 lai2 le0', 'le in tone numbers is le0'
+);
+assert.strictEqual(
+  pinyinWithPolyphony('了解', pinyin, { toneType: 'num', separator: ' ' }),
+  'liao3 jie3', 'liǎo in tone numbers is liao3'
+);
+assert.strictEqual(
+  pinyinWithPolyphony('了望台', pinyin, { toneType: 'num', separator: ' ' }),
+  'liao4 wang4 tai2', 'liào in tone numbers is liao4'
+);
+assert.strictEqual(
+  pinyinWithPolyphony('他来了', pinyin, { toneType: 'none', separator: ' ' }),
+  'ta lai le', 'tone-less le'
+);
+assert.strictEqual(
+  pinyinWithPolyphony('了解', pinyin, { toneType: 'none', separator: ' ' }),
+  'liao jie', 'tone-less liǎo'
+);
+
+// 12.5 Type 'all' tokens expose corrected readings
+const leTokens = pinyinWithPolyphony('他来了', pinyin, { type: 'all', toneType: 'symbol' });
+assert.deepStrictEqual(leTokens.map(t => t.pinyin), ['tā', 'lái', 'le'], 'Token readings must be corrected');
+assert.strictEqual(leTokens[2].num, 0, 'le token has neutral tone number');
+
+// 12.6 Regression: word grouping must not lose full-sentence context
+const groupingLeCases = [
+  ['他来了', 'tā lái le'],
+  ['下雨了', 'xiàyǔ le'],
+  ['我买了一本书', 'wǒ mǎi le yìběnshū'],
+  ['会议结束了', 'huì yì jiéshù le'],
+  ['看了看', 'kànle kàn'],
+  ['说了又说', 'shuō le yòu shuō'],
+  ['为了你', 'wèile nǐ'],
+  ['除了他', 'chúle tā']
+];
+for (const [text, expected] of groupingLeCases) {
+  assert.strictEqual(
+    convertWithWordGrouping(text, pinyin, { grouping: 'words' }, convertWithErhua),
+    expected, `Word grouping regressed for ${JSON.stringify(text)}`
+  );
+}
+
+// liǎo / liào must stay correct through the grouping path too
+const groupingLiaoCases = [
+  ['了解', 'liǎojiě'],
+  ['知了', 'zhī liǎo'],
+  ['受不了', 'shòubùliǎo'],
+  ['一笑了之', 'yíxiào liǎo zhī'],
+  ['直截了当', 'zhíjié liǎo dàng'],
+  ['了望台', 'liàowàng tái']
+];
+for (const [text, expected] of groupingLiaoCases) {
+  assert.strictEqual(
+    convertWithWordGrouping(text, pinyin, { grouping: 'words' }, convertWithErhua),
+    expected, `Word grouping regressed for ${JSON.stringify(text)}`
+  );
+}
+
+// 12.7 Erhua and tabular paths inherit the same 了 rules
+assert.strictEqual(
+  convertWithErhua('他来了', pinyin, { erhua: 'phonetic' }),
+  'tā lái le', 'Erhua path must keep le'
+);
+const leMatrix = convertMatrixToPinyin([['他来了', '了解'], ['下雨了', '了望台']], pinyin, {
+  toneType: 'symbol', separator: ' ', grouping: 'words'
+});
+assert.deepStrictEqual(leMatrix.matrix, [
+  ['tā lái le', 'liǎojiě'],
+  ['xiàyǔ le', 'liàowàng tái']
+], 'Tabular conversion must apply 了 rules per cell');
+console.log('✓ 了 (le / liǎo / liào) disambiguation passed!\n');
 
 console.log('🎉 ALL UNIT TESTS PASSED SUCCESSFULLY! 🎉');

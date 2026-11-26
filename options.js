@@ -62,12 +62,15 @@ function updatePreview() {
           erhua: erhuaEl ? erhuaEl.value : 'phonetic'
         });
       } else {
-        result = window.pinyinPro.pinyin(text, {
+        const opts = {
           toneType: toneTypeEl.value,
           separator: separatorEl.value,
           toneSandhi: toneSandhiEl.checked,
           nonZh: 'consecutive'
-        });
+        };
+        result = (window.PolyphonicHelper && typeof window.PolyphonicHelper.pinyinWithPolyphony === 'function')
+          ? window.PolyphonicHelper.pinyinWithPolyphony(text, window.pinyinPro.pinyin, opts)
+          : window.pinyinPro.pinyin(text, opts);
       }
       previewOutputEl.textContent = result || '(no result)';
       previewOutputEl.style.color = '#10B981';

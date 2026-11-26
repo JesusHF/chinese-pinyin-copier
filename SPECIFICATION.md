@@ -35,6 +35,7 @@ If Chinese characters are selected on the active webpage, the extension extracts
 9. **Word-Level Grouping (分词连写):** In accordance with Chinese Pinyin Orthography standards (GB/T 16159-2012), groups characters belonging to the same lexical word together without intra-word spaces (e.g. `洗手间在哪里` → `xǐshǒujiān zài nǎlǐ`, `你会说英文吗?` → `nǐ huì shuō yīngwén ma?`, `可以用支付宝吗?` → `kěyǐ yòng zhīfùbǎo ma?`), with proper brand preservation, modal verb splitting, and punctuation attachment.
 10. **Erhua (儿化) Support:** Automatically merges Erhua suffixes (`一点儿` → `diar`, `玩儿` → `war`) according to user configuration (Phonetic contraction, National standard orthography, or Off), while rigorously distinguishing independent non-Erhua morphemes (`婴儿`, `儿童`, `孤儿`, `托儿所`).
 11. **Configurability:** Users can adjust tone styles (marks, numbers, tone-less), word grouping mode, syllable separators, tone sandhi, Erhua mode, and toast preferences via the extension settings.
+12. **Polyphonic 了 Disambiguation (了 = le / liǎo / liào):** Every conversion path resolves 了 from the complete source sentence, never from an isolated segment. The neutral particle `le` is the default (e.g. `他来了` → `tā lái le`), while lexical verbs and potential complements use `liǎo` (e.g. `了解` → `liǎo jiě`, `受不了` → `shòu bu liǎo`) and the 瞭望 variant uses `liào` (e.g. `了望台` → `liào wàng tái`). See §4.6.
 
 ---
 
@@ -119,6 +120,25 @@ Google Sheets renders grid cells dynamically via an HTML5 `<canvas>` element and
 6. **Dual-MIME Clipboard Delivery:** Writes both `text/plain` (TSV) and `text/html` (HTML `<table>` markup) via `navigator.clipboard.write([new ClipboardItem(...)])`. This guarantees that pasting into Google Sheets, Microsoft Excel, Apple Numbers, or plain text editors restores the exact cells without merging or layout distortion.
 7. **Enhanced Toast HUD:** For multi-cell ranges, the floating toast HUD displays precise grid dimension feedback (e.g. `Pinyin Copied! (3 rows × 4 columns - 12 cells)` with preview).
 
+### 4.6 Polyphonic 了 Disambiguation (`lib/polyphonic.js`)
+
+`pinyin-pro` resolves polyphonic characters correctly only when it can see the surrounding sentence. Its single-character default for 了 is `liǎo`. The word-grouping engine originally converted each segmented word separately, so a sentence such as `他来了` was split into `他 / 来 / 了` and the final segment was read in isolation as `liǎo`.
+
+The fix converts the **entire text in one context-aware pass** (`pinyinWithPolyphony`) and then slices the resulting token stream per lexical word, so no segment is ever re-converted without its sentence context. An explicit, documented rule table (`classifyLe`) additionally corrects the few cases `pinyin-pro` still misreads.
+
+| Reading | Rule | Examples |
+| :--- | :--- | :--- |
+| **le** (neutral) | Dynamic/aspect particle after a verb (completed action, `V了V`) | `我吃了饭` *wǒ chī le fàn*, `看了看` *kàn le kàn* |
+| **le** (neutral) | Sentence-final modal particle (new situation / change of state) | `他来了` *tā lái le*, `下雨了` *xià yǔ le*, `好了` *hǎo le* |
+| **le** (neutral) | Fixed function words and interjections | `为了` *wèi le*, `除了` *chú le*, `算了` *suàn le*, `罢了` *bà le*, `得了` *dé le* |
+| **le** (neutral) | Isolated 了 with no lexical cue (statistically dominant reading) | `了` → *le*, `了吗` → *le ma* |
+| **liǎo** (3rd) | Lexical verb meaning "to finish / to end" | `了解` *liǎo jiě*, `了结` *liǎo jié*, `一了百了` *yī liǎo bǎi liǎo*, `直截了当` *zhí jié liǎo dàng* |
+| **liǎo** (3rd) | Lexical verb meaning "to understand / know clearly" | `一目了然` *yī mù liǎo rán*, `了如指掌` *liǎo rú zhǐ zhǎng*, `知了` *zhī liǎo* (cicada) |
+| **liǎo** (3rd) | Potential-result complement `V不/得了` ("cannot / can manage to") | `受不了` *shòu bu liǎo*, `去不了` *qù bu liǎo*, `办得了` *bàn de liǎo*, `大不了` *dà bu liǎo* |
+| **liào** (4th) | 了望, older spelling of 瞭望 ("look into the distance") | `了望台` *liào wàng tái*, `了望哨` *liào wàng shào* |
+
+For cases already handled correctly by `pinyin-pro`'s sentence-level dictionary (e.g. `了解`, `下雨了`), the helper deliberately defers to the engine. It only overrides high-confidence patterns (`V得了`, `了望`, isolated 了). All tone styles (`symbol` / `num` / `none`) and every conversion path (word grouping, syllable grouping, Erhua, spreadsheet cells, options preview) share this helper.
+
 ---
 
 ## 5. Edge Cases & Error Handling Matrix
@@ -148,6 +168,7 @@ ChineseExtension/
 ├── options.js                 # Options controller & live sandbox preview
 ├── lib/
 │   ├── erhua.js               # Phonological Erhua contraction engine & lexical exception lexicon
+│   ├── polyphonic.js          # Context-aware 了 (le / liǎo / liào) disambiguation rules
 │   ├── segmenter.js           # Lexical word segmentation engine (GB/T 16159-2012 word grouping)
 │   └── pinyin-pro.js          # Bundled offline Pinyin conversion dictionary (v3.29.5)
 ├── icons/
@@ -197,6 +218,7 @@ The test suite validates:
 - CJK Unicode regex pattern matching across all edge cases.
 - Pinyin conversion accuracy across tone symbols, numbers, and custom separators.
 - Polyphonic context disambiguation (多音字).
+- 了 disambiguation across all three readings (`le` / `liǎo` / `liào`), tone styles, and conversion paths.
 - RFC-compliant TSV parsing (embedded quotes, newlines, tabs) and round-trip serialization.
 - 2D matrix Pinyin conversion (preserving non-Chinese cells, empty cells, and coordinate alignment).
 - HTML table generation with safe character escaping.
